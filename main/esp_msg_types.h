@@ -41,6 +41,7 @@ struct esp_now_message_t {
     uint8_t len;
     esp_now_message_type_t type;
     uint8_t message[MESSAGE_SIZE];
+    uint8_t dest_tag[ESP_NOW_TAGLEN];
 };
 typedef struct esp_now_message_t esp_now_message_t;
 
