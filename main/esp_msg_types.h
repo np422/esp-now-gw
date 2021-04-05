@@ -4,6 +4,7 @@
 #define MESSAGE_SIZE   50
 #define ESP_NOW_TAGLEN 20
 #define MAX_BUTTONS    8
+#define MAX_RELAYS     8
 
 enum esp_now_peer_type_t {
     GW,
@@ -23,10 +24,9 @@ enum esp_now_message_type_t {
     BUTTON_PRESSED,
     SENSOR_FLOAT_VAL,
     SENSOR_READ,
-    RELAY_ON,
-    RELAY_OFF,
-    RELAY_TOGGLE,
+    RELAY_SET,
     RELAY_GET,
+    RELAY_STATUS,
     DISPLAY_OFF,
     DISPLAY_ON,
     DISPLAY_SET,
@@ -44,12 +44,37 @@ struct esp_now_message_t {
 };
 typedef struct esp_now_message_t esp_now_message_t;
 
+enum relay_status_t {
+    ON,
+    OFF,
+    TOGGLE
+};
+typedef enum relay_status_t relay_status_t;
+
+struct relay_set_message_t {
+    relay_status_t relay_status[MAX_RELAYS];
+    uint8_t dest_tag[ESP_NOW_TAGLEN];
+};
+typedef struct relay_set_message_t relay_set_message_t;
+
+struct relay_get_message_t {
+    uint8_t foo;
+    uint8_t dest_tag[ESP_NOW_TAGLEN];
+};
+typedef struct relay_get_message_t relay_get_message_t;
+
+struct relay_status_message_t {
+    relay_status_t relay_status[MAX_RELAYS];
+    uint8_t sender_tag[ESP_NOW_TAGLEN];
+};
+typedef struct relay_status_message_t relay_status_message_t;
+
 struct button_press_message_t {
     uint8_t buttons_pressed[MAX_BUTTONS];
     uint8_t sender_tag[ESP_NOW_TAGLEN];
 };
-
 typedef struct button_press_message_t button_press_message_t;
+
 struct register_message_t {
     esp_now_peer_type_t type;
     uint8_t tag[ESP_NOW_TAGLEN];

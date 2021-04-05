@@ -33,6 +33,36 @@ static void send_confirm_message(uint8_t *tag) {
 
 }
 
+static void send_relay_set_message(uint8_t *tag, relay_status_t foo) {
+    esp_now_queue_message_t qmsg;
+    relay_set_message_t *rmsg;
+    BaseType_t retval_enqueue;
+    uint8_t *dest_mac;
+
+    // Setup the confirm message
+    rmsg = (relay_set_message_t *) qmsg.esp_msg.message;
+
+    for (int i=0 ; i<MAX_RELAYS ; i++) {
+        rmsg->relay_status[i] = TOGGLE;
+    }
+
+    // Setup the esp now message
+    qmsg.esp_msg.len = sizeof(relay_set_message_t);
+    qmsg.esp_msg.type = RELAY_SET;
+
+    // Setup the queue message
+    dest_mac = get_dest_mac_from_tag(tag);
+    memcpy(qmsg.mac, dest_mac, ESP_NOW_ETH_ALEN);
+
+    ESP_LOGI(PROG, "Enqueueing relay set msg");
+    dump_esp_queue_msg(&qmsg);
+    retval_enqueue = xQueueSend(send_queue, (void *) &qmsg, portMAX_DELAY);
+    if (retval_enqueue == pdTRUE) {
+        ESP_LOGI(PROG, "Enqueue successful");
+    } else {
+        ESP_LOGI(PROG, "Enqueue failed");
+    }
+}
 
 static void esp_now_recv_task(void *foo) {
     esp_now_queue_message_t qmsg;
@@ -50,7 +80,8 @@ static void esp_now_recv_task(void *foo) {
                 send_confirm_message(reg_msg->tag);
                 break;
             case BUTTON_PRESSED:
-                ESP_LOGI(PROG, "Dequeued button press msg");
+                ESP_LOGI(PROG, "Dequeued button press msg, toggling relay-00");
+                send_relay_set_message((uint8_t *) "relay-00", TOGGLE);
                 break;
             default:
                 ESP_LOGI(PROG, "Recieved unsupported message type");
