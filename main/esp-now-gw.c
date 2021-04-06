@@ -17,6 +17,7 @@ static void send_confirm_message(uint8_t *tag) {
     // Setup the esp now message
     qmsg.esp_msg.len = sizeof(confirm_message_t);
     qmsg.esp_msg.type = CONFIRM;
+    strcpy((char *) qmsg.esp_msg.dest_tag, (char *) tag);
 
     // Setup the queue message
     dest_mac = get_dest_mac_from_tag(tag);
@@ -49,9 +50,13 @@ static void send_relay_set_message(uint8_t *tag, relay_status_t foo) {
     // Setup the esp now message
     qmsg.esp_msg.len = sizeof(relay_set_message_t);
     qmsg.esp_msg.type = RELAY_SET;
+    strcpy((char *) qmsg.esp_msg.dest_tag, (char *) tag);
 
     // Setup the queue message
-    dest_mac = get_dest_mac_from_tag(tag);
+    if ( (dest_mac = get_dest_mac_from_tag(tag)) == NULL) {
+        ESP_LOGI(PROG, "Unable to find dest mac for %s", (char *) tag);
+        return;
+    }
     memcpy(qmsg.mac, dest_mac, ESP_NOW_ETH_ALEN);
 
     ESP_LOGI(PROG, "Enqueueing relay set msg");
@@ -93,6 +98,7 @@ static void esp_now_recv_task(void *foo) {
         }
     }
 }
+
 static void my_espnow_recv_cb(const uint8_t *mac_addr, const uint8_t *data, int len) {
 
     esp_now_queue_message_t queue_msg;
@@ -142,7 +148,6 @@ static void send_task() {
         } else {
             ESP_LOGI(PROG, "Send task: failed to dequeue message");
         }
-        // TODO: free memory allocated in queue messages
     }
 }
 

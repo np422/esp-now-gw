@@ -40,6 +40,7 @@ const int max_peers = 20;
 #define QUEUE_SIZE     20
 #define MAX_TERMINALS  20
 
+#define TAG "gw"
 
 const uint8_t my_mac[ESP_NOW_ETH_ALEN] = { 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0x00 };
 

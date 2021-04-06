@@ -35,6 +35,7 @@ static void dump_esp_msg(esp_now_message_t *msg) {
     ESP_LOGI(PROG, "##################");
     ESP_LOGI(PROG, "Length: %u", msg->len);
     ESP_LOGI(PROG, "Type: %s", get_msg_type_name(msg->type));
+    ESP_LOGI(PROG, "Dest tag: %s", (char *) msg->dest_tag);
     switch(msg->type) {
     case REGISTER:
         ESP_LOGI(PROG, "Dumping register message");
