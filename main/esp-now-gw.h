@@ -27,7 +27,7 @@ const int max_peers = 20;
 #define ESPNOW_WIFI_MODE WIFI_MODE_APSTA
 #define ESPNOW_WIFI_IF   ESP_IF_WIFI_AP
 
-#define STA_WIFI_SSID      "FRA_LSTN_7DFG"
+#define STA_WIFI_SSID      "FRA_LSTN_adf"
 #define STA_WIFI_PASSWORD ""
 
 #define AP_WIFI_SSID       "ESP_NOW_AP"

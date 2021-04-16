@@ -34,7 +34,7 @@ static void send_confirm_message(uint8_t *tag) {
 
 }
 
-static void send_relay_set_message(uint8_t *tag, relay_status_t foo) {
+static void send_relay_set_message(uint8_t *tag, uint8_t relay_no, relay_status_t foo) {
     esp_now_queue_message_t qmsg;
     relay_set_message_t *rmsg;
     BaseType_t retval_enqueue;
@@ -43,8 +43,12 @@ static void send_relay_set_message(uint8_t *tag, relay_status_t foo) {
     // Setup the confirm message
     rmsg = (relay_set_message_t *) qmsg.esp_msg.message;
 
-    for (int i=0 ; i<MAX_RELAYS ; i++) {
-        rmsg->relay_status[i] = TOGGLE;
+    for (uint8_t i=0 ; i<MAX_RELAYS ; i++) {
+        if ( i == relay_no ) {
+            rmsg->relay_status[i] = foo;
+        } else {
+            rmsg->relay_status[i] = NOP;
+        }
     }
 
     // Setup the esp now message
@@ -85,8 +89,35 @@ static void esp_now_recv_task(void *foo) {
                 send_confirm_message(reg_msg->tag);
                 break;
             case BUTTON_PRESSED:
-                ESP_LOGI(PROG, "Dequeued button press msg, toggling relay-00");
-                send_relay_set_message((uint8_t *) "relay-00", TOGGLE);
+                ESP_LOGI(PROG, "Dequeued button press msg");
+                button_press_message_t *button_msg;
+                button_msg = (button_press_message_t *) qmsg.esp_msg.message;
+                if ( strcmp("button-00", (char *) button_msg->sender_tag) == 0) {
+                    ESP_LOGI(PROG, "button-00 presseed, toggling relay-00");
+                    send_relay_set_message((uint8_t *) "relay-00", 0, TOGGLE);
+                } else if ( strcmp("button-01", (char *) button_msg->sender_tag) == 0) {
+                   ESP_LOGI(PROG, "button-01 presseed, toggling relay-00");
+                   send_relay_set_message((uint8_t *) "relay-00", 0, TOGGLE);
+                } else if ( strcmp("button-02", (char *) button_msg->sender_tag) == 0) {
+                    ESP_LOGI(PROG, "button-02 presseed, dumping data");
+                    for (uint8_t j=0; j<MAX_BUTTONS; j++) {
+                        ESP_LOGI(PROG,"Button number %i has got state %i", j, button_msg->buttons_pressed[j]);
+                    }
+                    if (button_msg->buttons_pressed[0] == 1) {
+                        ESP_LOGI(PROG, "Button 0 pressed on button-02, toggling relay-01/0");
+                        send_relay_set_message((uint8_t *) "relay-01", 0, TOGGLE);
+                    } else if (button_msg->buttons_pressed[1] == 1) {
+                        ESP_LOGI(PROG, "Button 0 pressed on button-02, toggling relay-01/1");
+                        send_relay_set_message((uint8_t *) "relay-01", 1, TOGGLE);
+                    } else if (button_msg->buttons_pressed[2] == 1) {
+                        ESP_LOGI(PROG, "Button 0 pressed on button-02, toggling relay-0/0");
+                        send_relay_set_message((uint8_t *) "relay-00", 0, TOGGLE);
+                    } else {
+                        ESP_LOGI(PROG, "Unknown button pressed on button-02, disregarding message");
+                    }
+                } else {
+                    ESP_LOGI(PROG, "Unknown button pressed");
+                }
                 break;
             default:
                 ESP_LOGI(PROG, "Recieved unsupported message type");

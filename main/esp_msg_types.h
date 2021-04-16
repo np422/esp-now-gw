@@ -48,7 +48,8 @@ typedef struct esp_now_message_t esp_now_message_t;
 enum relay_status_t {
     ON,
     OFF,
-    TOGGLE
+    TOGGLE,
+    NOP
 };
 typedef enum relay_status_t relay_status_t;
 
